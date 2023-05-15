@@ -34,7 +34,7 @@ public class BoundaryTrackerTest
         Direction direction = Direction.DOWN;
         Position pos = new Position(1, 2, direction);
         
-        Position pos2 = direction.move(pos, array, 4);
+        Position pos2 = direction.move(pos, array, 255, 4);
         assertEquals(1, pos2.x);
         assertEquals(2, pos2.y);
         assertEquals(Direction.RIGHT, pos2.direction);
@@ -52,7 +52,7 @@ public class BoundaryTrackerTest
         Direction direction = Direction.DOWN;
         Position pos = new Position(1, 1, direction);
         
-        Position pos2 = direction.move(pos, array, 4);
+        Position pos2 = direction.move(pos, array, 255, 4);
         assertEquals(1, pos2.x);
         assertEquals(2, pos2.y);
         assertEquals(Direction.DOWN, pos2.direction);
@@ -68,7 +68,7 @@ public class BoundaryTrackerTest
         Direction direction = Direction.DOWN;
         Position pos = new Position(1, 1, direction);
         
-        Position pos2 = direction.move(pos, array, 4);
+        Position pos2 = direction.move(pos, array, 255, 4);
         assertEquals(1, pos2.x);
         assertEquals(1, pos2.y);
         assertEquals(Direction.RIGHT, pos2.direction);
@@ -84,7 +84,7 @@ public class BoundaryTrackerTest
         Direction direction = Direction.DOWN;
         Position pos = new Position(2, 1, direction);
         
-        Position pos2 = direction.move(pos, array, 8);
+        Position pos2 = direction.move(pos, array, 255, 8);
         assertEquals(1, pos2.x);
         assertEquals(2, pos2.y);
         assertEquals(Direction.LEFT, pos2.direction);
@@ -101,7 +101,7 @@ public class BoundaryTrackerTest
         Direction direction = Direction.DOWN;
         Position pos = new Position(2, 1, direction);
         
-        Position pos2 = direction.move(pos, array, 4);
+        Position pos2 = direction.move(pos, array, 255, 4);
         assertEquals(1, pos2.x);
         assertEquals(2, pos2.y);
         assertEquals(Direction.LEFT, pos2.direction);
@@ -229,6 +229,31 @@ public class BoundaryTrackerTest
         
         assertFalse(vertices.isEmpty());
         assertEquals(32, vertices.size());
+    }
+    
+    /**
+     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundaryBinary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
+     */
+    @Test
+    public final void testTrackBoundary_NestedLabels()
+    {
+        ByteProcessor array = new ByteProcessor(6, 6);
+        ImageUtils.fillRect(array, 1, 1, 2, 2, 3);
+        ImageUtils.fillRect(array, 3, 1, 2, 2, 5);
+        ImageUtils.fillRect(array, 1, 3, 2, 2, 7);
+        ImageUtils.fillRect(array, 3, 3, 2, 2, 9);
+        ImageUtils.fillRect(array, 2, 2, 2, 2, 4);
+        ImageUtils.print(array);
+        
+        int x0 = 2;
+        int y0 = 2;
+        BoundaryTracker.Direction initialDirection = BoundaryTracker.Direction.DOWN;
+        
+        BoundaryTracker tracker = new BoundaryTracker(4);
+        ArrayList<Point> vertices = tracker.trackBoundaryBinary(array, x0, y0, initialDirection);
+        
+        assertFalse(vertices.isEmpty());
+        assertEquals(8, vertices.size());
     }
     
 }

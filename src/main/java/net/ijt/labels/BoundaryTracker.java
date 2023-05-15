@@ -26,7 +26,7 @@ public class BoundaryTracker
     {
         public Point getVertex(Position pos);
         
-        public Position move(Position pos, ImageProcessor array, int conn);
+        public Position move(Position pos, ImageProcessor array, int value, int conn);
         
         /**
          * @return the next direction when rotation +90 degrees
@@ -49,7 +49,7 @@ public class BoundaryTracker
             }
 
             @Override
-            public Position move(Position pos, ImageProcessor array, int conn)
+            public Position move(Position pos, ImageProcessor array, int value, int conn)
             {
                 // position of the point in the opposite direction within current configuration
                 int xn = pos.x + 1;
@@ -61,8 +61,8 @@ public class BoundaryTracker
                 boolean b0 = false, b1 = false;
                 if (xn < array.getWidth())
                 {
-                    b0 = array.get(xn, pos.y) > 0;
-                    b1 = yn < array.getHeight() ? array.get(xn, yn) > 0 : false;
+                    b0 = ((int) array.getf(xn, pos.y)) == value;
+                    b1 = yn < array.getHeight() ? ((int) array.getf(xn, yn)) == value : false;
                 }
                 
                 if (!b0 && (!b1 || conn == 4))
@@ -108,7 +108,7 @@ public class BoundaryTracker
             }
 
             @Override
-            public Position move(Position pos, ImageProcessor array, int conn)
+            public Position move(Position pos, ImageProcessor array, int value, int conn)
             {
                 // position of the point in the opposite direction within current configuration
                 int xn = pos.x + 1;
@@ -120,8 +120,8 @@ public class BoundaryTracker
                 boolean b0 = false, b1 = false;
                 if (yn >= 0)
                 {
-                    b0 = array.get(pos.x, yn) > 0;
-                    b1 = xn < array.getWidth() ? array.get(xn, yn) > 0 : false;
+                    b0 = ((int) array.getf(pos.x, yn)) == value;
+                    b1 = xn < array.getWidth() ? ((int) array.getf(xn, yn)) == value : false;
                 }
                 
                 if (!b0 && (!b1 || conn == 4))
@@ -167,7 +167,7 @@ public class BoundaryTracker
             }
 
             @Override
-            public Position move(Position pos, ImageProcessor array, int conn)
+            public Position move(Position pos, ImageProcessor array, int value, int conn)
             {
                 // position of the point in the opposite direction within current configuration
                 int xn = pos.x - 1;
@@ -179,8 +179,8 @@ public class BoundaryTracker
                 boolean b0 = false, b1 = false;
                 if (xn >= 0)
                 {
-                    b0 = array.get(xn, pos.y) > 0;
-                    b1 = yn >= 0 ? array.get(xn, yn) > 0 : false;
+                    b0 = ((int) array.get(xn, pos.y)) == value;
+                    b1 = yn >= 0 ? ((int) array.getf(xn, yn)) == value : false;
                 }
                 
                 if (!b0 && (!b1 || conn == 4))
@@ -227,7 +227,7 @@ public class BoundaryTracker
             }
 
             @Override
-            public Position move(Position pos, ImageProcessor array, int conn)
+            public Position move(Position pos, ImageProcessor array, int value, int conn)
             {
                 // position of the point in the opposite direction within current configuration
                 int xn = pos.x - 1;
@@ -239,8 +239,8 @@ public class BoundaryTracker
                 boolean b0 = false, b1 = false;
                 if (yn < array.getHeight())
                 {
-                    b0 = array.get(pos.x, yn) > 0;
-                    b1 = xn >= 0 ? array.get(xn, yn) > 0 : false;
+                    b0 = ((int) array.getf(pos.x, yn)) == value;
+                    b1 = xn >= 0 ? ((int) array.getf(xn, yn)) == value : false;
                 }
                 
                 if (!b0 && (!b1 || conn == 4))
@@ -297,9 +297,9 @@ public class BoundaryTracker
             return this.direction.getVertex(this);
         }
         
-        public Position forward(ImageProcessor array, int conn)
+        public Position forward(ImageProcessor array, int value, int conn)
         {
-            return this.direction.move(this, array, conn);
+            return this.direction.move(this, array, value, conn);
         }
         
         @Override
@@ -348,6 +348,7 @@ public class BoundaryTracker
         ArrayList<Point> vertices = new ArrayList<Point>();
         
         // initialize tracking algo state
+        int value = (int) array.getf(x0, y0);
         Position pos0 = new Position(x0, y0, initialDirection);
         Position pos = new Position(x0, y0, initialDirection);
         
@@ -355,7 +356,7 @@ public class BoundaryTracker
         do
         {
             vertices.add(pos.getVertex(pos));
-            pos = pos.forward(array, this.conn);
+            pos = pos.forward(array, value, this.conn);
         } while (!pos0.equals(pos));
         
         return vertices;
