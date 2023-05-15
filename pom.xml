@@ -17,19 +17,19 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <!-- Artifact is the base name of the generated jar. --> 
     <!-- Feel free to update to what you want, but remember that --> 
     <!-- ImageJ plugins require an underscore '_' in the name... --> 
-    <artifactId>Plugin_Template</artifactId>
+    <artifactId>Labels_To_Polygons</artifactId>
     <!-- Good practice are to use semantic versioning, --> 
     <!-- and to remove the "-SNAPSHOT" suffix before releasing new version' --> 
     <version>0.0.1-SNAPSHOT</version>
     <!-- The name of the project at it will appear in IDE or during compilation --> 
     <!-- (may be different from artifactID) --> 
-    <name>Plugin_Template</name>
-    <description>Simple project template for ImageJ plugins</description>
+    <name>Labels_To_Polygons</name>
+    <description>Convert label maps into polygons</description>
     
     <!-- Global settings for the project --> 
     <properties>
         <!-- Use a long-term support version for source --> 
-        <maven.compiler.source>1.17</maven.compiler.source>
+        <maven.compiler.source>17</maven.compiler.source>
         <!-- Use 1.8 for target, to avoid compatibility issues--> 
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
