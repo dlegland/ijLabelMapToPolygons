@@ -6,7 +6,6 @@ package net.ijt.labels;
 import java.awt.Point;
 import java.util.ArrayList;
 
-import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 
 /**
@@ -18,268 +17,193 @@ import ij.process.ImageProcessor;
 public class BoundaryTracker
 {
     /**
-     * The connectivity to use for tracking boundary.
+     * The connectivity to use for tracking boundary. Should be either 4 or 8.
+     * Default is 4.
      */
     int conn = 4;
     
     interface Direction
     {
-        public Point getVertex(Position pos);
-        
-        public Position move(Position pos, ImageProcessor array, int value, int conn);
-        
-        /**
-         * @return the next direction when rotation +90 degrees
-         *         counter-clockwise.
-         */
-        public Direction next();
-
-        /**
-         * @return the next direction when rotation -90 degrees
-         *         counter-clockwise.
-         */
-        public Direction previous();
-        
         public static final Direction RIGHT = new Direction()
         {
+            @Override
+            public int[][] coordsShifts()
+            {
+                return new int[][] {{1, 0}, {1, 1}};
+            }
+            
             @Override
             public Point getVertex(Position pos)
             {
                 return new Point(pos.x, pos.y + 1);
             }
-
+            
             @Override
-            public Position move(Position pos, ImageProcessor array, int value, int conn)
+            public Position turnLeft(Position pos)
             {
-                // position of the point in the opposite direction within current configuration
-                int xn = pos.x + 1;
-                int yn = pos.y + 1;
-                
-                // determine configuration of the two pixels in current direction
-                // initialize with false, to manage the case of configuration on the border 
-                // (assume false outside)
-                boolean b0 = false, b1 = false;
-                if (xn < array.getWidth())
-                {
-                    b0 = ((int) array.getf(xn, pos.y)) == value;
-                    b1 = yn < array.getHeight() ? ((int) array.getf(xn, yn)) == value : false;
-                }
-                
-                if (!b0 && (!b1 || conn == 4))
-                {
-                    // corner configuration -> +90 direction
-                    return new Position(pos.x, pos.y, next());
-                }
-                else if (b1 && (b0 || conn == 8))
-                {
-                    // reentrant corner configuration -> -90 direction
-                    return new Position(pos.x + 1, pos.y + 1, previous());
-                }
-                else if (b0 && !b1)
-                {
-                    // straight border configuration -> same direction
-                    return new Position(pos.x + 1, pos.y, this);
-                }
-                else
-                {
-                    throw new RuntimeException("Should not reach this part...");
-                }
+                return new Position(pos.x, pos.y, UP);
             }
 
             @Override
-            public Direction next()
+            public Position forward(Position pos)
             {
-                return UP;
+                return new Position(pos.x + 1, pos.y, RIGHT);
             }
 
             @Override
-            public Direction previous()
+            public Position turnRight(Position pos)
             {
-                return DOWN;
+                return new Position(pos.x + 1, pos.y + 1, DOWN);
             }
         };
         
         public static final Direction UP = new Direction()
         {
             @Override
+            public int[][] coordsShifts()
+            {
+                return new int[][] {{0, -1}, {1, -1}};
+            }
+            
+            @Override
             public Point getVertex(Position pos)
             {
                 return new Point(pos.x + 1, pos.y + 1);
             }
-
-            @Override
-            public Position move(Position pos, ImageProcessor array, int value, int conn)
-            {
-                // position of the point in the opposite direction within current configuration
-                int xn = pos.x + 1;
-                int yn = pos.y - 1;
-                
-                // determine configuration of the two pixels in current direction
-                // initialize with false, to manage the case of configuration on the border 
-                // (assume false outside)
-                boolean b0 = false, b1 = false;
-                if (yn >= 0)
-                {
-                    b0 = ((int) array.getf(pos.x, yn)) == value;
-                    b1 = xn < array.getWidth() ? ((int) array.getf(xn, yn)) == value : false;
-                }
-                
-                if (!b0 && (!b1 || conn == 4))
-                {
-                    // corner configuration -> +90 direction
-                    return new Position(pos.x, pos.y, next());
-                }
-                else if (b1 && (b0 || conn == 8))
-                {
-                    // reentrant corner configuration -> -90 direction
-                    return new Position(pos.x + 1, pos.y - 1, previous());
-                }
-                else if (b0 && !b1)
-                {
-                    // straight border configuration -> same direction
-                    return new Position(pos.x, pos.y - 1, this);
-                }
-                else
-                {
-                    throw new RuntimeException("Should not reach this part...");
-                }
-            }
             
             @Override
-            public Direction next()
+            public Position turnLeft(Position pos)
             {
-                return LEFT;
+                return new Position(pos.x, pos.y, LEFT);
             }
 
             @Override
-            public Direction previous()
+            public Position forward(Position pos)
             {
-                return RIGHT;
+                return new Position(pos.x, pos.y - 1, UP);
+            }
+
+            @Override
+            public Position turnRight(Position pos)
+            {
+                return new Position(pos.x + 1, pos.y - 1, RIGHT);
             }
         };
         
         public static final Direction LEFT = new Direction()
         {
             @Override
+            public int[][] coordsShifts()
+            {
+                return new int[][] {{-1, 0}, {-1, -1}};
+            }
+            
+            @Override
             public Point getVertex(Position pos)
             {
                 return new Point(pos.x + 1, pos.y);
             }
-
-            @Override
-            public Position move(Position pos, ImageProcessor array, int value, int conn)
-            {
-                // position of the point in the opposite direction within current configuration
-                int xn = pos.x - 1;
-                int yn = pos.y - 1;
-                
-                // determine configuration of the two pixels in current direction
-                // initialize with false, to manage the case of configuration on the border 
-                // (assume false outside)
-                boolean b0 = false, b1 = false;
-                if (xn >= 0)
-                {
-                    b0 = ((int) array.get(xn, pos.y)) == value;
-                    b1 = yn >= 0 ? ((int) array.getf(xn, yn)) == value : false;
-                }
-                
-                if (!b0 && (!b1 || conn == 4))
-                {
-                    // corner configuration -> +90 direction
-                    return new Position(pos.x, pos.y, next());
-                }
-                else if (b1 && (b0 || conn == 8))
-                {
-                    // reentrant corner configuration -> -90 direction
-                    return new Position(pos.x - 1, pos.y - 1, previous());
-                }
-                else if (b0 && !b1)
-                {
-                    // straight border configuration -> same direction
-                    return new Position(pos.x - 1, pos.y, this);
-                }
-                else
-                {
-                    throw new RuntimeException("Should not reach this part...");
-                }
-            }
             
             @Override
-            public Direction next()
+            public Position turnLeft(Position pos)
             {
-                return DOWN;
+                return new Position(pos.x, pos.y, DOWN);
             }
 
             @Override
-            public Direction previous()
+            public Position forward(Position pos)
             {
-                return UP;
+                return new Position(pos.x - 1, pos.y, LEFT);
+            }
+
+            @Override
+            public Position turnRight(Position pos)
+            {
+                return new Position(pos.x - 1, pos.y - 1, UP);
             }
         };
         
         public static final Direction DOWN = new Direction()
         {
-
+            @Override
+            public int[][] coordsShifts()
+            {
+                return new int[][] {{0, +1}, {-1, 1}};
+            }
+            
             @Override
             public Point getVertex(Position pos)
             {
                 return new Point(pos.x, pos.y);
             }
-
-            @Override
-            public Position move(Position pos, ImageProcessor array, int value, int conn)
-            {
-                // position of the point in the opposite direction within current configuration
-                int xn = pos.x - 1;
-                int yn = pos.y + 1;
-                
-                // determine configuration of the two pixels in current direction
-                // initialize with false, to manage the case of configuration on the border 
-                // (assume false outside)
-                boolean b0 = false, b1 = false;
-                if (yn < array.getHeight())
-                {
-                    b0 = ((int) array.getf(pos.x, yn)) == value;
-                    b1 = xn >= 0 ? ((int) array.getf(xn, yn)) == value : false;
-                }
-                
-                if (!b0 && (!b1 || conn == 4))
-                {
-                    // corner configuration -> +90 direction
-                    return new Position(pos.x, pos.y, next());
-                }
-                else if (b1 && (b0 || conn == 8))
-                {
-                    // reentrant corner configuration -> -90 direction
-                    return new Position(pos.x - 1, pos.y + 1, previous());
-                }
-                else if (b0 && !b1)
-                {
-                    // straight border configuration -> same direction
-                    return new Position(pos.x, pos.y + 1, this);
-                }
-                else
-                {
-                    throw new RuntimeException("Should not reach this part...");
-                }
-            }
             
             @Override
-            public Direction next()
+            public Position turnLeft(Position pos)
             {
-                return RIGHT;
+                return new Position(pos.x, pos.y, RIGHT);
             }
 
             @Override
-            public Direction previous()
+            public Position forward(Position pos)
             {
-                return LEFT;
+                return new Position(pos.x, pos.y + 1, DOWN);
+            }
+
+            @Override
+            public Position turnRight(Position pos)
+            {
+                return new Position(pos.x - 1, pos.y + 1, LEFT);
             }
         };
+
+        /**
+         * Returns a 2-by-2 array corresponding to a pair of coordinates shifts,
+         * that will be used to access coordinates of next pixels within
+         * configuration.
+         * 
+         * The first coordinates will be the pixel in the continuation of the
+         * current direction. The second coordinate will be the pixel in the
+         * opposite current 2-by-2 configuration.
+         * 
+         * @return a 2-by-2 array corresponding to a pair of coordinates shifts.
+         */
+        public int[][] coordsShifts();
+        
+        public Point getVertex(Position pos);
+        
+        /**
+         * Keeps current reference pixel and turn direction by +90 degrees in
+         * counter-clockwise direction.
+         * 
+         * @param pos
+         *            the position to update
+         * @return the new position
+         */
+        public Position turnLeft(Position pos);
+
+        /**
+         * Updates the specified position by iterating by one step in the
+         * current direction.
+         * 
+         * @param pos
+         *            the position to update
+         * @return the new position
+         */
+        public Position forward(Position pos);
+        
+        /**
+         * Keeps current reference pixel and turn direction by -90 degrees in
+         * counter-clockwise direction.
+         * 
+         * @param pos
+         *            the position to update
+         * @return the new position
+         */
+        public Position turnRight(Position pos);
     }
     
     
-    static class Position
+    static final class Position
     {
         int x;
         int y;
@@ -297,11 +221,6 @@ public class BoundaryTracker
             return this.direction.getVertex(this);
         }
         
-        public Position forward(ImageProcessor array, int value, int conn)
-        {
-            return this.direction.move(this, array, value, conn);
-        }
-        
         @Override
         public boolean equals(Object obj)
         {
@@ -311,9 +230,12 @@ public class BoundaryTracker
             Position that = (Position) obj;
             
             // check each class member
-            if (this.x != that.x) return false;
-            if (this.y != that.y) return false;
-            if (this.direction != that.direction) return false;
+            if (this.x != that.x)
+                return false;
+            if (this.y != that.y)
+                return false;
+            if (this.direction != that.direction)
+                return false;
             
             // return true when all tests checked
             return true;
@@ -326,7 +248,7 @@ public class BoundaryTracker
     public BoundaryTracker()
     {
     }
-   
+    
     /**
      * Constructor that allows to specify connectivity.
      * 
@@ -337,13 +259,19 @@ public class BoundaryTracker
     {
         if (conn != 4 && conn != 8)
         {
-            throw new IllegalArgumentException("Connectivity must be either 4 or 8");
+            throw new IllegalArgumentException(
+                    "Connectivity must be either 4 or 8");
         }
         this.conn = conn;
     }
     
-    public ArrayList<Point> trackBoundaryBinary(ByteProcessor array, int x0, int y0, Direction initialDirection)
+    public ArrayList<Point> trackBoundaryBinary(ImageProcessor array, int x0,
+            int y0, Direction initialDirection)
     {
+        // retrieve image size
+        int sizeX = array.getWidth();
+        int sizeY = array.getHeight();
+        
         // initialize result array
         ArrayList<Point> vertices = new ArrayList<Point>();
         
@@ -356,7 +284,49 @@ public class BoundaryTracker
         do
         {
             vertices.add(pos.getVertex(pos));
-            pos = pos.forward(array, value, this.conn);
+            
+            // compute position of the two other points in current 2-by-2 configuration
+            int[][] shifts = pos.direction.coordsShifts();
+            // the pixel in the continuation of current direction
+            int xn = pos.x + shifts[0][0];
+            int yn = pos.y + shifts[0][1];
+            // the pixel in the diagonal position within current configuration
+            int xd = pos.x + shifts[1][0];
+            int yd = pos.y + shifts[1][1];
+            
+            // determine configuration of the two pixels in current direction
+            // initialize with false, to manage the case of configuration on the
+            // border. In any cases, assume that reference pixel in current
+            // position belongs to the array.
+            boolean b0 = false;
+            if (xn >= 0 && xn < sizeX && yn >= 0 && yn < sizeY)
+            {
+                b0 = ((int) array.getf(xn, yn)) == value;
+            }
+            boolean b1 = false;
+            if (xd >= 0 && xd < sizeX && yd >= 0 && yd < sizeY)
+            {
+                b1 = ((int) array.getf(xd, yd)) == value;
+            }
+            
+            if (!b0 && (!b1 || conn == 4))
+            {
+                // corner configuration -> +90 direction
+                pos = pos.direction.turnLeft(pos);
+            } else if (b1 && (b0 || conn == 8))
+            {
+                // reentrant corner configuration -> -90 direction
+                pos = pos.direction.turnRight(pos);
+            } else if (b0 && !b1)
+            {
+                // straight border configuration -> same direction
+                pos = pos.direction.forward(pos);
+            } else
+            {
+                throw new RuntimeException("Should not reach this part...");
+            }
+            
+//            pos = pos.forward(array, value);
         } while (!pos0.equals(pos));
         
         return vertices;
