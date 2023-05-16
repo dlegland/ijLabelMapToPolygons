@@ -8,11 +8,13 @@ import static org.junit.Assert.assertFalse;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.junit.Test;
 
 import ij.process.ByteProcessor;
 import inra.ijpb.data.image.ImageUtils;
+import inra.ijpb.geometry.Polygon2D;
 import net.ijt.labels.BoundaryTracker.Direction;
 import net.ijt.labels.BoundaryTracker.Position;
 
@@ -84,7 +86,7 @@ public class BoundaryTrackerTest
     
     
     /**
-     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundaryBinary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
+     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
      */
     @Test
     public final void testTrackBoundaryBinary_singleSquare()
@@ -100,14 +102,14 @@ public class BoundaryTrackerTest
         BoundaryTracker.Direction initialDirection = Direction.DOWN;
         
         BoundaryTracker tracker = new BoundaryTracker();
-        ArrayList<Point> vertices = tracker.trackBoundaryBinary(array, x0, y0, initialDirection);
+        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
         
         assertFalse(vertices.isEmpty());
         assertEquals(8, vertices.size());
     }
     
     /**
-     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundaryBinary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
+     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
      */
     @Test
     public final void testTrackBoundaryBinary_ExpandedCorners_C4()
@@ -125,14 +127,14 @@ public class BoundaryTrackerTest
         BoundaryTracker.Direction initialDirection = Direction.DOWN;
         
         BoundaryTracker tracker = new BoundaryTracker();
-        ArrayList<Point> vertices = tracker.trackBoundaryBinary(array, x0, y0, initialDirection);
+        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
         
         assertFalse(vertices.isEmpty());
         assertEquals(32, vertices.size());
     }
     
     /**
-     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundaryBinary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
+     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
      */
     @Test
    public final void testTrackBoundaryBinary_ExpandedCorners_C4_TouchBorders()
@@ -150,14 +152,14 @@ public class BoundaryTrackerTest
         BoundaryTracker.Direction initialDirection = Direction.DOWN;
         
         BoundaryTracker tracker = new BoundaryTracker();
-        ArrayList<Point> vertices = tracker.trackBoundaryBinary(array, x0, y0, initialDirection);
+        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
         
         assertFalse(vertices.isEmpty());
         assertEquals(32, vertices.size());
     }
     
     /**
-     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundaryBinary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
+     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
      */
     @Test
     public final void testTrackBoundaryBinary_ExpandedCorners_C8()
@@ -175,14 +177,14 @@ public class BoundaryTrackerTest
         BoundaryTracker.Direction initialDirection = Direction.DOWN;
         
         BoundaryTracker tracker = new BoundaryTracker(8);
-        ArrayList<Point> vertices = tracker.trackBoundaryBinary(array, x0, y0, initialDirection);
+        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
         
         assertFalse(vertices.isEmpty());
         assertEquals(32, vertices.size());
     }
     
     /**
-     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundaryBinary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
+     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
      */
     @Test
     public final void testTrackBoundaryBinary_ExpandedCorners_C8_TouchBorders()
@@ -200,14 +202,14 @@ public class BoundaryTrackerTest
         BoundaryTracker.Direction initialDirection = Direction.DOWN;
         
         BoundaryTracker tracker = new BoundaryTracker(8);
-        ArrayList<Point> vertices = tracker.trackBoundaryBinary(array, x0, y0, initialDirection);
+        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
         
         assertFalse(vertices.isEmpty());
         assertEquals(32, vertices.size());
     }
     
     /**
-     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundaryBinary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
+     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
      */
     @Test
     public final void testTrackBoundary_NestedLabels()
@@ -224,10 +226,58 @@ public class BoundaryTrackerTest
         int y0 = 2;
         
         BoundaryTracker tracker = new BoundaryTracker(4);
-        ArrayList<Point> vertices = tracker.trackBoundaryBinary(array, x0, y0, Direction.DOWN);
+        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, Direction.DOWN);
         
         assertFalse(vertices.isEmpty());
         assertEquals(8, vertices.size());
     }
     
+    /**
+     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
+     */
+    @Test
+    public final void test_process_square2x2()
+    {
+        ByteProcessor array = new ByteProcessor(4, 4);
+        ImageUtils.fillRect(array, 1, 1, 2, 2, 3);
+//        ImageUtils.print(array);
+        
+        BoundaryTracker tracker = new BoundaryTracker(4);
+        Map<Integer,ArrayList<Polygon2D>> boundaries = tracker.process(array);
+        
+        assertFalse(boundaries.isEmpty());
+        assertEquals(1, boundaries.size());
+        
+        Polygon2D poly3 = boundaries.get(3).get(0);
+        assertEquals(8, poly3.vertexNumber());
+    }
+    
+    /**
+     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
+     */
+    @Test
+    public final void test_process_FourLabels()
+    {
+        ByteProcessor array = new ByteProcessor(6, 6);
+        ImageUtils.fillRect(array, 1, 1, 2, 2, 3);
+        ImageUtils.fillRect(array, 3, 1, 2, 2, 5);
+        ImageUtils.fillRect(array, 1, 3, 2, 2, 7);
+        ImageUtils.fillRect(array, 3, 3, 2, 2, 9);
+//        ImageUtils.print(array);
+        
+        BoundaryTracker tracker = new BoundaryTracker(4);
+        Map<Integer,ArrayList<Polygon2D>> boundaries = tracker.process(array);
+        
+        assertFalse(boundaries.isEmpty());
+        assertEquals(4, boundaries.size());
+        
+        Polygon2D poly3 = boundaries.get(3).get(0);
+        assertEquals(8, poly3.vertexNumber());
+        Polygon2D poly5 = boundaries.get(5).get(0);
+        assertEquals(8, poly5.vertexNumber());
+        Polygon2D poly7 = boundaries.get(7).get(0);
+        assertEquals(8, poly7.vertexNumber());
+        Polygon2D poly9 = boundaries.get(9).get(0);
+        assertEquals(8, poly9.vertexNumber());
+    }
 }
