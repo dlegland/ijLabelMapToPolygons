@@ -52,7 +52,14 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
             <scope>test</scope>
         </dependency>
         
-    </dependencies>
+	    <!-- Dependency to MorphoLibJ for integration and image utils --> 
+        <dependency>
+	        <groupId>fr.inra.ijpb</groupId>
+    	    <artifactId>MorphoLibJ_</artifactId>
+	        <version>1.6.0.1</version>
+	    </dependency>
+	  
+      </dependencies>
     
     <build>
         
