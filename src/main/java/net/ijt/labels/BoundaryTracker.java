@@ -534,11 +534,4 @@ public class BoundaryTracker
         }
         return new Polygon2D(vx, vy);
     }
-
-    class Result
-    {
-        Map<Integer, ArrayList<Polygon2D>> boundaries;
-        
-        
-    }
 }
