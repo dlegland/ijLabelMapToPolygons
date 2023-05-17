@@ -376,30 +376,29 @@ public class BoundaryTracker
             
             for (int x = 0; x < sizeX; x++)
             {
-                int label = (int) array.getf(x, y); 
-                if (label == 0)
-                {
-                    continue;
-                }
-                
-                // current pixel is in a label;
-                // first check if this is a transition from another label (or background)
+                int label = (int) array.getf(x, y);
+
+                // first check if this is a transition between two labels
                 if (label == currentLabel)
                 {
                     continue;
                 }
+                currentLabel = label;
                 
-                // we are in a new transition into a region,
-                // we first need to check if the boundary was not already tracked
+                // do not process background values
+                if (label == 0)
+                {
+                    continue;
+                }
+                // if the boundary was already tracked, no need to work again
                 if ((maskArray.get(x, y) & 0x08) > 0)
                 {
-                    currentLabel = label;
                     continue;
                 }
                 
-                // track boundary, and convert to polygon object
+                // ok, we are at a transition that can be used to initialize a new boundary
+                // -> track the boundary, and convert to polygon object
                 ArrayList<Point> vertices = trackBoundary(array, maskArray, x, y, Direction.DOWN);
-                currentLabel = label;
                 Polygon2D poly = createPolygon(vertices);
                 
                 // update map from labels to array of polygons

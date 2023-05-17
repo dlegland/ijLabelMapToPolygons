@@ -84,7 +84,6 @@ public class BoundaryTrackerTest
         assertEquals(Direction.LEFT, pos2.direction);
     }
     
-    
     /**
      * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
      */
@@ -279,5 +278,28 @@ public class BoundaryTrackerTest
         assertEquals(8, poly7.vertexNumber());
         Polygon2D poly9 = boundaries.get(9).get(0);
         assertEquals(8, poly9.vertexNumber());
+    }
+
+    /**
+     * Test method for {@link net.ijt.labels.BoundaryTracker#trackBoundary(ij.process.ByteProcessor, int, int, net.ijt.labels.BoundaryTracker.Direction)}.
+     */
+    @Test
+    public final void test_process_squareWithHole()
+    {
+        ByteProcessor array = new ByteProcessor(5, 5);
+        ImageUtils.fillRect(array, 1, 1, 3, 3, 255);
+        array.set(2, 2, 0);
+        
+        BoundaryTracker tracker = new BoundaryTracker(4);
+        Map<Integer,ArrayList<Polygon2D>> boundaries = tracker.process(array);
+        
+        assertFalse(boundaries.isEmpty());
+        assertEquals(1, boundaries.size());
+        
+        ArrayList<Polygon2D> polygons = boundaries.get(255);
+        assertEquals(2, polygons.size());
+        
+        assertEquals(12, polygons.get(0).vertexNumber());
+        assertEquals(4, polygons.get(1).vertexNumber());
     }
 }
