@@ -9,10 +9,11 @@ import java.util.Map;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.gui.Overlay;
+import ij.gui.GenericDialog;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.plugin.PlugIn;
+import ij.plugin.frame.RoiManager;
 import ij.process.ImageProcessor;
 import inra.ijpb.geometry.Polygon2D;
 
@@ -32,29 +33,51 @@ public class RegionBoundaryPolygons implements PlugIn
         ImagePlus imagePlus = IJ.getImage();
         ImageProcessor image = imagePlus.getProcessor();
         
+        
+        // create the dialog, with operator options
+        GenericDialog gd = new GenericDialog("Label Maps To Rois");
+        gd.addChoice("Connectivity:", new String[] {"C4", "C8"}, "C4");
+        gd.addStringField("Name Pattern", "r%03d");
+        
+        // wait for user input
+        gd.showDialog();
+        // If cancel was clicked, do nothing
+        if (gd.wasCanceled())
+            return;
+        
+        // parse options
+        int conn = gd.getNextChoiceIndex() == 0 ? 4 : 8;
+        String pattern = gd.getNextString();
+        
         // compute boundaries
-        BoundaryTracker tracker = new BoundaryTracker(4);
+        BoundaryTracker tracker = new BoundaryTracker(conn);
         Map<Integer, ArrayList<Polygon2D>> boundaries = tracker.process(image);
         
-        // find overlay to update
-        Overlay ovr = imagePlus.getOverlay();
-        if (ovr == null)
-        {
-            ovr = new Overlay();
-        }
+        RoiManager rm = new RoiManager();
         
-        // populate overlay with PolygonRoi
+        // populate RoiManager with PolygonRoi
         for (int label : boundaries.keySet())
         {
             ArrayList<Polygon2D> polygons = boundaries.get(label);
-            for (Polygon2D poly : polygons)
+            String name = String.format(pattern, label);
+            
+            if (polygons.size() == 1)
             {
-                PolygonRoi roi = createPolygonRoi(poly);
-                ovr.add(roi);
+                PolygonRoi roi = createPolygonRoi(polygons.get(0));
+                roi.setName(name);
+                rm.addRoi(roi);
+            }
+            else
+            {
+                int index = 0;
+                for (Polygon2D poly : polygons)
+                {
+                    PolygonRoi roi = createPolygonRoi(poly);
+                    roi.setName(name + "-" + (index++));
+                    rm.addRoi(roi);
+                }
             }
         }
-        
-        imagePlus.setOverlay(ovr);
     }
     
     private static final PolygonRoi createPolygonRoi(Polygon2D poly)
