@@ -6,7 +6,7 @@ package net.ijt.labels;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -101,7 +101,7 @@ public class BoundaryTrackerTest
         BoundaryTracker.Direction initialDirection = Direction.DOWN;
         
         BoundaryTracker tracker = new BoundaryTracker();
-        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
+        ArrayList<Point2D> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
         
         assertFalse(vertices.isEmpty());
         assertEquals(8, vertices.size());
@@ -126,7 +126,7 @@ public class BoundaryTrackerTest
         BoundaryTracker.Direction initialDirection = Direction.DOWN;
         
         BoundaryTracker tracker = new BoundaryTracker();
-        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
+        ArrayList<Point2D> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
         
         assertFalse(vertices.isEmpty());
         assertEquals(32, vertices.size());
@@ -151,7 +151,7 @@ public class BoundaryTrackerTest
         BoundaryTracker.Direction initialDirection = Direction.DOWN;
         
         BoundaryTracker tracker = new BoundaryTracker();
-        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
+        ArrayList<Point2D> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
         
         assertFalse(vertices.isEmpty());
         assertEquals(32, vertices.size());
@@ -176,7 +176,7 @@ public class BoundaryTrackerTest
         BoundaryTracker.Direction initialDirection = Direction.DOWN;
         
         BoundaryTracker tracker = new BoundaryTracker(8);
-        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
+        ArrayList<Point2D> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
         
         assertFalse(vertices.isEmpty());
         assertEquals(32, vertices.size());
@@ -201,7 +201,7 @@ public class BoundaryTrackerTest
         BoundaryTracker.Direction initialDirection = Direction.DOWN;
         
         BoundaryTracker tracker = new BoundaryTracker(8);
-        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
+        ArrayList<Point2D> vertices = tracker.trackBoundary(array, x0, y0, initialDirection);
         
         assertFalse(vertices.isEmpty());
         assertEquals(32, vertices.size());
@@ -225,7 +225,7 @@ public class BoundaryTrackerTest
         int y0 = 2;
         
         BoundaryTracker tracker = new BoundaryTracker(4);
-        ArrayList<Point> vertices = tracker.trackBoundary(array, x0, y0, Direction.DOWN);
+        ArrayList<Point2D> vertices = tracker.trackBoundary(array, x0, y0, Direction.DOWN);
         
         assertFalse(vertices.isEmpty());
         assertEquals(8, vertices.size());

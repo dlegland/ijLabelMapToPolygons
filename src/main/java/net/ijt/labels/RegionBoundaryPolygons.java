@@ -37,6 +37,7 @@ public class RegionBoundaryPolygons implements PlugIn
         // create the dialog, with operator options
         GenericDialog gd = new GenericDialog("Label Maps To Rois");
         gd.addChoice("Connectivity:", new String[] {"C4", "C8"}, "C4");
+        gd.addChoice("Vertex Location:", new String[] {"Corners", "Edge Middles", "Pixel Centers"}, "Corners");
         gd.addStringField("Name Pattern", "r%03d");
         
         // wait for user input
@@ -47,13 +48,22 @@ public class RegionBoundaryPolygons implements PlugIn
         
         // parse options
         int conn = gd.getNextChoiceIndex() == 0 ? 4 : 8;
+        int locIndex = gd.getNextChoiceIndex();
+        BoundaryTracker.VertexLocation loc = BoundaryTracker.VertexLocation.CORNER;
+        if (locIndex == 1) loc = BoundaryTracker.VertexLocation.EDGE_CENTER;
+        if (locIndex == 2) loc = BoundaryTracker.VertexLocation.PIXEL;
         String pattern = gd.getNextString();
         
         // compute boundaries
-        BoundaryTracker tracker = new BoundaryTracker(conn);
+        BoundaryTracker tracker = new BoundaryTracker(conn, loc);
         Map<Integer, ArrayList<Polygon2D>> boundaries = tracker.process(image);
         
-        RoiManager rm = new RoiManager();
+        // retrieve RoiManager
+        RoiManager rm = RoiManager.getInstance();
+        if (rm == null)
+        {
+            rm = new RoiManager();
+        }
         
         // populate RoiManager with PolygonRoi
         for (int label : boundaries.keySet())

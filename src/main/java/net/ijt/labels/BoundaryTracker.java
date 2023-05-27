@@ -4,6 +4,7 @@
 package net.ijt.labels;
 
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
@@ -26,6 +27,12 @@ public class BoundaryTracker
      */
     int conn = 4;
     
+    /**
+     * Defines where the ROI vertices are located according to position of
+     * current pixel.
+     */
+    VertexLocation vertexLocation = VertexLocation.EDGE_CENTER;
+
     enum Direction
     {
         RIGHT
@@ -225,6 +232,26 @@ public class BoundaryTracker
             return this.direction.getVertex(this);
         }
         
+        public Point2D getVertex(Position pos, VertexLocation vertex)
+        {
+            switch (vertex)
+            {
+                case CORNER: 
+                    return this.direction.getVertex(this);
+                case EDGE_CENTER: 
+                    switch(direction)
+                    {
+                        case DOWN: return new Point2D.Double(this.x, this.y + 0.5);
+                        case UP:   return new Point2D.Double(this.x + 1.0, this.y + 0.5);
+                        case LEFT: return new Point2D.Double(this.x + 0.5, this.y);
+                        case RIGHT: return new Point2D.Double(this.x + 0.5, this.y + 1.0);
+                    }
+                case PIXEL: 
+                    return new Point2D.Double(this.x + 0.5, this.y + 0.5);
+                default: throw new IllegalArgumentException("Unexpected value: " + vertex);
+            }
+        }
+        
         @Override
         public boolean equals(Object obj)
         {
@@ -244,6 +271,13 @@ public class BoundaryTracker
             // return true when all tests checked
             return true;
         }
+    }
+    
+    enum VertexLocation
+    {
+        CORNER,
+        EDGE_CENTER,
+        PIXEL;
     }
     
     /**
@@ -270,6 +304,23 @@ public class BoundaryTracker
     }
     
     /**
+     * Constructor that allows to specify connectivity and location of vertices.
+     * 
+     * @param conn
+     *            the connectivity to use (must be either 4 or 8)
+     */
+    public BoundaryTracker(int conn, VertexLocation loc)
+    {
+        if (conn != 4 && conn != 8)
+        {
+            throw new IllegalArgumentException(
+                    "Connectivity must be either 4 or 8");
+        }
+        this.conn = conn;
+        this.vertexLocation = loc;
+    }
+    
+    /**
      * Tracks the boundary that starts at the current position by iterating on
      * successive neighbor positions, and returns the set of boundary points.
      * 
@@ -289,7 +340,7 @@ public class BoundaryTracker
      * @return the list of points that form the boundary starting at specified
      *         position
      */
-    public ArrayList<Point> trackBoundary(ImageProcessor array, int x0,
+    public ArrayList<Point2D> trackBoundary(ImageProcessor array, int x0,
             int y0, Direction initialDirection)
     {
         // retrieve image size
@@ -297,7 +348,7 @@ public class BoundaryTracker
         int sizeY = array.getHeight();
         
         // initialize result array
-        ArrayList<Point> vertices = new ArrayList<Point>();
+        ArrayList<Point2D> vertices = new ArrayList<Point2D>();
         
         // initialize tracking algo state
         int value = (int) array.getf(x0, y0);
@@ -307,7 +358,7 @@ public class BoundaryTracker
         // iterate over boundary until we come back at initial position
         do
         {
-            vertices.add(pos.getVertex(pos));
+            vertices.add(pos.getVertex(pos, vertexLocation));
             
             // compute position of the two other points in current 2-by-2 configuration
             int[][] shifts = pos.direction.coordsShifts();
@@ -398,7 +449,7 @@ public class BoundaryTracker
                 
                 // ok, we are at a transition that can be used to initialize a new boundary
                 // -> track the boundary, and convert to polygon object
-                ArrayList<Point> vertices = trackBoundary(array, maskArray, x, y, Direction.DOWN);
+                ArrayList<Point2D> vertices = trackBoundary(array, maskArray, x, y, Direction.DOWN);
                 Polygon2D poly = createPolygon(vertices);
                 
                 // update map from labels to array of polygons
@@ -439,7 +490,7 @@ public class BoundaryTracker
      * @return the list of points that form the boundary starting at specified
      *         position
      */
-    private ArrayList<Point> trackBoundary(ImageProcessor array, ImageProcessor maskArray, int x0,
+    private ArrayList<Point2D> trackBoundary(ImageProcessor array, ImageProcessor maskArray, int x0,
             int y0, Direction initialDirection)
     {
         // retrieve image size
@@ -447,7 +498,7 @@ public class BoundaryTracker
         int sizeY = array.getHeight();
         
         // initialize result array
-        ArrayList<Point> vertices = new ArrayList<Point>();
+        ArrayList<Point2D> vertices = new ArrayList<Point2D>();
         
         // initialize tracking algo state
         int value = (int) array.getf(x0, y0);
@@ -458,7 +509,7 @@ public class BoundaryTracker
         do
         {
             // update vertices
-            vertices.add(pos.getVertex(pos));
+            vertices.add(pos.getVertex(pos, vertexLocation));
             
             // mark the current pixel with integer that depends on position
             int mask = maskArray.get(pos.x, pos.y);
@@ -521,16 +572,16 @@ public class BoundaryTracker
         return vertices;
     }
     
-    private static final Polygon2D createPolygon(ArrayList<Point> vertices)
+    private static final Polygon2D createPolygon(ArrayList<Point2D> vertices)
     {
         int n = vertices.size();
         double[] vx = new double[n];
         double[] vy = new double[n];
         for (int i = 0; i < n; i++)
         {
-            Point p = vertices.get(i);
-            vx[i] = p.x;
-            vy[i] = p.y;
+            Point2D p = vertices.get(i);
+            vx[i] = p.getX();
+            vy[i] = p.getY();
         }
         return new Polygon2D(vx, vy);
     }
